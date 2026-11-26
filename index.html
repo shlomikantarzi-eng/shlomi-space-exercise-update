@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101317">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Space Exercise Daily</title>
+<style>
+:root{
+  --bg:#101317; --surface:#181c22; --surface2:#1f252d; --line:#2a313a;
+  --text:#e8eaed; --muted:#98a2ad; --faint:#6b7480;
+  --accent:#7cb7a6; --accent-soft:rgba(124,183,166,.14); --accent-ink:#0e1a16;
+  --warm:#d9b46e; --warm-soft:rgba(217,180,110,.14);
+  --radius:14px; --tab-h:64px;
+  --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Hebrew","Arial Hebrew",Arial,sans-serif;
+  line-height:1.5;padding-bottom:calc(var(--tab-h) + var(--safe-b) + 16px)}
+button{font:inherit;color:inherit}
+.wrap{width:100%;max-width:720px;margin:0 auto;padding:0 14px}
+.ltr{direction:ltr;unicode-bidi:isolate;text-align:right}
+.n{unicode-bidi:isolate;white-space:nowrap}
+
+/* header */
+header{position:sticky;top:0;z-index:20;background:rgba(16,19,23,.96);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line);padding-top:var(--safe-t)}
+.hrow{display:flex;align-items:center;gap:8px;padding:8px 0 4px}
+.brand{font-size:.8125rem;font-weight:700;letter-spacing:.04em;color:var(--muted)}
+.weekpill{margin-inline-start:auto;display:flex;align-items:center;gap:4px}
+.nav-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--surface);
+  display:grid;place-items:center;font-size:1rem;cursor:pointer}
+.weektxt{min-width:112px;text-align:center;font-weight:700;font-size:.9375rem}
+.weektxt small{display:block;font-weight:500;color:var(--muted);font-size:.75rem;line-height:1.2}
+.today-btn{display:none;border:1px solid var(--warm);color:var(--warm);background:transparent;border-radius:10px;
+  padding:0 10px;height:36px;font-size:.8125rem;font-weight:700;cursor:pointer}
+.today-btn.show{display:block}
+.prog{height:3px;background:var(--surface2);border-radius:4px;overflow:hidden;margin:2px 0 8px}
+.prog i{display:block;height:100%;background:var(--accent);border-radius:4px}
+
+/* day strip */
+.strip{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;padding-bottom:10px}
+.dbtn{position:relative;border:1px solid var(--line);background:var(--surface);border-radius:12px;
+  padding:5px 2px 4px;text-align:center;cursor:pointer;min-height:50px}
+.dbtn b{display:block;font-size:1rem}
+.dbtn span{display:block;font-size:.6875rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dbtn.gym b{color:var(--text)}
+.dbtn.light b{color:var(--muted)}
+.dbtn.sel{background:var(--accent);border-color:var(--accent)}
+.dbtn.sel b,.dbtn.sel span{color:var(--accent-ink)}
+.dbtn.today::after{content:"";position:absolute;top:5px;left:5px;width:7px;height:7px;border-radius:50%;background:var(--warm)}
+.dbtn.done::before{content:"✓";position:absolute;top:2px;right:6px;font-size:.6875rem;font-weight:800;color:var(--accent)}
+.dbtn.sel.done::before{color:var(--accent-ink)}
+
+/* day hero */
+.hero{margin:16px 0 12px}
+.hero .dayname{font-size:1.75rem;font-weight:800;line-height:1.2;margin:0}
+.hero .daytitle{font-size:1.125rem;font-weight:600;color:var(--accent);margin:4px 0 10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:.8125rem;padding:4px 10px;border-radius:999px;background:var(--surface2);color:var(--muted);border:1px solid var(--line)}
+.chip.strong{color:var(--text)}
+.note{margin:12px 0;padding:12px 14px;border-radius:12px;font-size:.9375rem;border:1px solid var(--line);background:var(--surface)}
+.note.warm{border-color:rgba(217,180,110,.45);background:var(--warm-soft)}
+.note.accent{border-color:rgba(124,183,166,.45);background:var(--accent-soft)}
+.note b{color:var(--text)}
+.section-label{font-size:.8125rem;font-weight:700;color:var(--muted);letter-spacing:.04em;margin:20px 2px 8px}
+
+/* exercise card */
+.ex{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:10px}
+.ex-top{display:flex;gap:12px;align-items:flex-start}
+.num{flex:0 0 32px;height:32px;border-radius:10px;background:var(--accent-soft);color:var(--accent);
+  display:grid;place-items:center;font-weight:800;font-size:.9375rem}
+.ex.heavy .num{background:var(--warm-soft);color:var(--warm)}
+.ex-name{font-size:1.125rem;font-weight:700;line-height:1.35;margin:0}
+.ex-en{font-size:.8125rem;color:var(--faint);margin-top:2px}
+.ex-target{font-size:.875rem;color:var(--muted);margin-top:2px}
+.stats{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0}
+.stat{border-radius:10px;padding:6px 12px;background:var(--surface2);font-size:.875rem;color:var(--muted)}
+.stat.main{background:var(--accent);color:var(--accent-ink);font-weight:800;font-size:1rem}
+.ex.heavy .stat.main{background:var(--warm);color:#1d160a}
+.tag{font-size:.75rem;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--warm-soft);color:var(--warm);margin-inline-start:6px;vertical-align:2px}
+.load{font-size:.875rem;color:var(--muted);margin-top:10px}
+.alt{margin-top:10px;padding:9px 12px;border-radius:10px;background:var(--surface2);font-size:.875rem;color:var(--muted)}
+.alt b{color:var(--text);font-weight:600}
+details.how{margin-top:10px;border-top:1px solid var(--line);padding-top:6px}
+details.how summary{list-style:none;cursor:pointer;font-weight:600;font-size:.9375rem;color:var(--accent);padding:8px 0;display:flex;align-items:center;gap:6px}
+details.how summary::-webkit-details-marker{display:none}
+details.how summary::after{content:"";margin-inline-start:auto;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .15s;margin-top:-4px}
+details.how[open] summary::after{transform:rotate(225deg);margin-top:4px}
+details.how ol{margin:4px 0 8px;padding-inline-start:20px;font-size:.9375rem}
+details.how li{margin-bottom:6px}
+.vbtn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:44px;border-radius:10px;
+  border:1px solid var(--line);background:var(--surface2);color:var(--text);text-decoration:none;font-weight:600;font-size:.9375rem;margin-top:6px}
+.donebar{margin:18px 0 8px}
+.donebtn{width:100%;min-height:52px;border-radius:14px;border:1px solid var(--accent);background:transparent;color:var(--accent);
+  font-weight:800;font-size:1rem;cursor:pointer}
+.donebtn.on{background:var(--accent);color:var(--accent-ink)}
+.walk-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.walk-card ul{margin:6px 0 0;padding-inline-start:20px}
+
+/* year tab */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin:12px 0}
+.card h2{font-size:1.25rem;margin:0 0 4px}
+.card h3{font-size:1rem;margin:0 0 6px}
+.card p{margin:4px 0;color:var(--muted);font-size:.9375rem}
+.card ul{margin:6px 0 0;padding-inline-start:20px;font-size:.9375rem}
+.card li{margin-bottom:6px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.kpi{background:var(--surface2);border-radius:10px;padding:10px;text-align:center}
+.kpi b{display:block;font-size:1rem}
+.kpi span{font-size:.75rem;color:var(--muted)}
+.blk{margin:14px 0}
+.blk-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:6px}
+.blk-h b{font-size:.9375rem}
+.blk-h span{font-size:.75rem;color:var(--muted)}
+.weeks{display:grid;grid-template-columns:repeat(9,1fr);gap:5px}
+.wk{aspect-ratio:1;border-radius:8px;border:1px solid var(--line);background:var(--surface);font-size:.8125rem;font-weight:700;
+  display:grid;place-items:center;cursor:pointer;color:var(--muted)}
+.wk.past{background:var(--surface2);color:var(--faint)}
+.wk.del{border-style:dashed}
+.wk.cur{background:var(--warm);color:#1d160a;border-color:var(--warm)}
+.wk.view{outline:2px solid var(--accent);outline-offset:1px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.75rem;color:var(--muted);margin-top:6px}
+
+/* nutrition */
+.totals{position:sticky;top:calc(var(--hdr,90px) + 8px);z-index:5;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;margin:12px 0}
+.tot-row{display:flex;justify-content:space-between;font-size:.875rem;color:var(--muted)}
+.tot-row b{color:var(--text);font-size:1.25rem}
+.bar{height:8px;background:var(--surface2);border-radius:8px;overflow:hidden;margin-top:8px;position:relative}
+.bar i{display:block;height:100%;background:var(--accent)}
+.bar i.over{background:var(--warm)}
+.meal h3{font-size:1rem;margin:18px 2px 8px}
+.opt{display:block;width:100%;text-align:right;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer}
+.opt.on{border-color:var(--accent);background:var(--accent-soft)}
+.opt b{font-size:.9375rem}
+.opt p{margin:4px 0 0;font-size:.8125rem;color:var(--muted)}
+.opt .mac{font-size:.75rem;color:var(--faint);margin-top:4px}
+
+/* guide */
+.set-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.set-row input{flex:1;min-width:150px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface2);color:var(--text);padding:0 12px;font-size:1rem}
+.btn{min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface2);padding:0 14px;font-weight:700;cursor:pointer}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.danger.arm{border-color:var(--warm);color:var(--warm)}
+
+/* tabs */
+nav.tabs{position:fixed;bottom:0;left:0;right:0;z-index:30;background:#181c22;border-top:1px solid var(--line);
+  padding-bottom:var(--safe-b)}
+nav.tabs .in{max-width:720px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);height:var(--tab-h)}
+.tab{border:0;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  color:var(--faint);font-size:.75rem;font-weight:600;cursor:pointer}
+.tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tab.on{color:var(--accent)}
+.page{display:none}.page.on{display:block}
+body:not(.p-day) .strip, body:not(.p-day) .fab{display:none}
+
+/* timer */
+.fab{position:fixed;left:12px;bottom:calc(var(--tab-h) + var(--safe-b) + 12px);z-index:31;height:52px;min-width:52px;padding:0 14px;justify-content:center;
+  border-radius:26px;border:0;background:var(--surface2);color:var(--text);box-shadow:0 6px 20px rgba(0,0,0,.45);
+  font-weight:800;font-size:1rem;display:flex;align-items:center;gap:8px;cursor:pointer;outline:1px solid var(--line)}
+.fab.run{background:var(--warm);color:#1d160a}
+.fab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.sheet{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.5);display:none;align-items:flex-end}
+.sheet.on{display:flex}
+.sheet .box{width:100%;max-width:720px;margin:0 auto;background:var(--surface);border-radius:18px 18px 0 0;padding:18px 16px calc(18px + var(--safe-b))}
+.sheet h3{margin:0 0 12px;font-size:1.0625rem}
+.tgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.tgrid .btn{min-height:56px;font-size:1rem}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="hrow">
+      <div class="brand">SPACE DAILY</div>
+      <button class="today-btn" id="todayBtn">חזרה להיום</button>
+      <div class="weekpill">
+        <button class="nav-btn" id="prevW" aria-label="שבוע קודם">›</button>
+        <div class="weektxt" id="weekTxt"></div>
+        <button class="nav-btn" id="nextW" aria-label="שבוע הבא">‹</button>
+      </div>
+    </div>
+    <div class="prog"><i id="progBar"></i></div>
+    <div class="strip" id="strip"></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="page on" id="p-day"></section>
+  <section class="page" id="p-year"></section>
+  <section class="page" id="p-food"></section>
+  <section class="page" id="p-guide"></section>
+</main>
+
+<button class="fab" id="fab" aria-label="טיימר מנוחה">
+  <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg><span id="fabTxt"></span>
+</button>
+<div class="sheet" id="sheet"><div class="box">
+  <h3>טיימר מנוחה</h3>
+  <div class="tgrid">
+    <button class="btn" data-t="60">1:00</button><button class="btn" data-t="90">1:30</button>
+    <button class="btn" data-t="120">2:00</button><button class="btn" data-t="180">3:00</button>
+  </div>
+  <div class="set-row"><button class="btn" id="tStop" style="flex:1">עצירה</button><button class="btn" id="tClose" style="flex:1">סגירה</button></div>
+</div></div>
+
+<nav class="tabs"><div class="in">
+  <button class="tab on" data-p="day"><svg viewBox="0 0 24 24"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/></svg>אימון</button>
+  <button class="tab" data-p="year"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>שנה</button>
+  <button class="tab" data-p="food"><svg viewBox="0 0 24 24"><path d="M7 3v8a2 2 0 0 0 2 2v8M11 3v8M3 3v8a2 2 0 0 0 2 2M17 21V3c2.5 1.5 4 4.5 4 8h-4"/></svg>תזונה</button>
+  <button class="tab" data-p="guide"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/></svg>מדריך</button>
+</div></nav>
+
+<script>
+const DATA = {"start": "2026-12-06", "EX": {"bench": {"name": "לחיצת חזה במוט", "en": "Barbell Bench Press", "target": "חזה, יד אחורית, כתף קדמית", "kind": "heavy", "how": ["שוכבים כשהעיניים מתחת למוט. מקרבים שכמות לאחור ולמטה, כפות רגליים יציבות על הרצפה.", "אחיזה קצת רחבה מהכתפיים. מורידים לאט (2–3 שניות) לחזה התחתון, מרפקים בזווית של כ-45° מהגוף.", "נוגעים קלות בחזה ודוחפים חזק למעלה. תמיד עם תפסי ביטחון במתקן."], "alt": "תפוס? לחיצת חזה בסמית' או במכונת לחיצת חזה, באותם סטים וחזרות.", "video": "rT7DgCr-3pg"}, "incline_db": {"name": "לחיצת דאמבלים בשיפוע", "en": "Incline Dumbbell Press", "target": "חזה עליון", "kind": "main", "how": ["ספה בשיפוע של 30°. יושבים עם הדאמבלים על הירכיים ונשכבים איתם לאחור.", "מורידים לאט עד מתיחה בחזה, מרפקים מעט מתחת לקו הכתפיים.", "דוחפים למעלה ומעט פנימה, בלי להקיש את הדאמבלים."], "alt": "תפוס? לחיצת חזה בשיפוע בסמית', או מכונת לחיצה בשיפוע.", "video": "awEEyL5zGvU"}, "smith_incline": {"name": "לחיצת חזה בשיפוע בסמית'", "en": "Smith Machine Incline Press", "target": "חזה עליון", "kind": "heavy", "how": ["ספה בשיפוע 30° מתחת לסמית', המוט יורד לחזה העליון.", "משחררים את המוט בסיבוב פרקי הידיים. מורידים לאט לחזה העליון.", "דוחפים למעלה בלי לנעול מרפקים בחוזקה. בסוף נועלים את המוט בסיבוב חזרה."], "alt": "תפוס? לחיצת דאמבלים בשיפוע.", "video": "obiun9YWitM"}, "flat_db": {"name": "לחיצת חזה עם דאמבלים", "en": "Flat Dumbbell Press", "target": "חזה", "kind": "main", "how": ["ספה שטוחה. מורידים את הדאמבלים לאט לצדי החזה עד מתיחה.", "מרפקים בזווית של כ-45° מהגוף. דוחפים למעלה ומעט פנימה."], "alt": "תפוס? מכונת לחיצת חזה.", "video": "omGiL5h2R_I"}, "chest_press_m": {"name": "מכונת לחיצת חזה", "en": "Machine Chest Press", "target": "חזה", "kind": "main", "how": ["מכוונים את המושב כך שהידיות בגובה אמצע החזה.", "גב צמוד למשענת, שכמות לאחור. דוחפים קדימה ומחזירים לאט עד מתיחה בחזה."], "alt": "תפוסה? לחיצת חזה עם דאמבלים על ספה שטוחה.", "video": "Nv7TPc6btPk"}, "incline_fly": {"name": "פרפר דאמבלים בשיפוע", "en": "Incline Dumbbell Fly", "target": "חזה (מתיחה)", "kind": "iso", "how": ["ספה בשיפוע 30°, דאמבלים מעל החזה, כפות ידיים זו מול זו, מרפקים קצת כפופים.", "פותחים לצדדים לאט עד מתיחה עמוקה בחזה, ומחזירים בתנועה של חיבוק."], "alt": "תפוס? מכונת פרפר (פק דק) או פרפר בכבלים.", "video": "cLNgz0T1kEw"}, "pulldown": {"name": "משיכה לחזה בפולי עליון", "en": "Lat Pulldown", "target": "גב רחב", "kind": "main", "how": ["אחיזה רחבה מעט מהכתפיים, הברכיים נעולות מתחת לכרית.", "מושכים את המוט לחזה העליון ומובילים עם המרפקים כלפי מטה. גוף נוטה מעט לאחור.", "מחזירים לאט עד ידיים ישרות ומתיחה בגב."], "alt": "תפוס? עליות מתח (אם צריך, עם גומייה או במכונת עזר).", "video": "CAwf7n6Luuc"}, "neutral_pulldown": {"name": "משיכה בפולי עליון באחיזה צרה ניטרלית", "en": "Close Neutral-Grip Pulldown", "target": "גב רחב", "kind": "main", "how": ["מחברים ידית V או ידית מקבילה. כפות ידיים זו מול זו.", "מושכים לחזה העליון, מרפקים צמודים לגוף, ומחזירים לאט עד מתיחה מלאה."], "alt": "תפוס? משיכה לחזה עם מוט רגיל, או עליות מתח באחיזה ניטרלית.", "video": "lmmShS3KLB4"}, "pullup_w": {"name": "עליות מתח עם משקל", "en": "Weighted Pull-Up", "target": "גב רחב, יד קדמית", "kind": "heavy", "how": ["חגורת משקל או דאמבל בין הרגליים. מתחילים מתלייה עם ידיים ישרות.", "מושכים עד שהסנטר מעל המוט, מובילים עם המרפקים כלפי מטה.", "יורדים לאט, 2–3 שניות. אם הקמיצה מגיבה: רצועות הרמה."], "alt": "תפוס או כבד מדי? משיכה לחזה בפולי עליון, כבד, 6–8 חזרות.", "video": "QZue7F_Zk3A"}, "cable_row": {"name": "חתירה בכבל בישיבה", "en": "Seated Cable Row", "target": "גב אמצעי", "kind": "main", "how": ["ידית V, רגליים על המדרך, ברכיים מעט כפופות, גב ישר.", "מושכים לבטן ומקרבים שכמות. מחזירים לאט ונותנים לגב להימתח קדימה."], "alt": "תפוס? מכונת חתירה, או חתירה בדאמבל ביד אחת על ספה.", "video": "cAeBmvpt31A"}, "sa_cable_row": {"name": "חתירה בכבל ביד אחת", "en": "Single-Arm Cable Row", "target": "גב רחב ואמצעי", "kind": "iso", "how": ["כבל בגובה החזה, ידית אחת. עומדים או יושבים מול המכונה.", "מושכים את המרפק לאחור לכיוון הירך, ומחזירים לאט עד מתיחה. יד אחת ואז השנייה."], "alt": "תפוס? חתירה בדאמבל ביד אחת על ספה.", "video": "NwyhyKyFgf4"}, "cs_row": {"name": "חתירה במכונה עם תמיכת חזה", "en": "Chest-Supported Machine Row", "target": "גב אמצעי, כתף אחורית", "kind": "main", "how": ["החזה נשען על הכרית, אוחזים בידיות.", "מושכים את המרפקים לאחור ומקרבים שכמות, עוצרים שנייה, ומחזירים לאט."], "alt": "תפוסה? חתירת T-bar, או חתירה בכבל בישיבה.", "video": "Mlr-Lx-10HQ"}, "tbar": {"name": "חתירת T-bar", "en": "T-Bar Row", "target": "גב אמצעי ועבה", "kind": "heavy", "how": ["עומדים מעל המוט, ברכיים כפופות, גב ישר בזווית של כ-45°.", "מושכים את הידית לבטן העליונה ומקרבים שכמות. מורידים לאט עד ידיים ישרות."], "alt": "תפוס? מכונת חתירה עם תמיכת חזה.", "video": "Mlr-Lx-10HQ"}, "shoulder_db": {"name": "לחיצת כתפיים עם דאמבלים בישיבה", "en": "Seated DB Shoulder Press", "target": "כתף קדמית ואמצעית", "kind": "main", "how": ["ספה כמעט זקופה (80°–90°). דאמבלים בגובה האוזניים, כפות ידיים קדימה.", "דוחפים למעלה עד כמעט ישר, ומורידים לאט עד גובה האוזניים."], "alt": "תפוס? מכונת לחיצת כתפיים, או לחיצה בסמית' בישיבה.", "video": "WKEl69bIGus"}, "shoulder_m": {"name": "מכונת לחיצת כתפיים", "en": "Machine Shoulder Press", "target": "כתף קדמית ואמצעית", "kind": "main", "how": ["מכוונים מושב כך שהידיות בגובה הכתפיים.", "דוחפים למעלה בלי לקשת את הגב, ומורידים לאט."], "alt": "תפוסה? לחיצת כתפיים עם דאמבלים בישיבה.", "video": "Anu8s_nkNpM"}, "lateral_cable": {"name": "הרחקה לצד בכבל", "en": "Cable Lateral Raise", "target": "כתף אמצעית (רוחב)", "kind": "iso", "how": ["כבל בגובה הנמוך ביותר, ידית אחת. עומדים בצד, היד הרחוקה מהמכונה אוחזת בידית.", "מרימים לצד עד גובה הכתף, מרפק קצת כפוף. מורידים לאט. כל הסטים ביד אחת ואז בשנייה."], "alt": "תפוס? הרחקה לצדדים עם דאמבלים, או מכונת הרחקה.", "video": "qghfvzcoS2I"}, "reverse_pec": {"name": "פרפר הפוך במכונה", "en": "Reverse Pec Deck", "target": "כתף אחורית", "kind": "iso", "how": ["יושבים עם הפנים אל המכונה, החזה צמוד לכרית, הידיות בגובה הכתפיים.", "פותחים ידיים לאחור בקשת רחבה, מרפקים קצת כפופים. עוצרים שנייה ומחזירים לאט."], "alt": "תפוסה? משיכת פנים בכבל עם חבל, או הרחקה לאחור עם דאמבלים בכיפוף.", "video": "Y7ZKBP5bMwg"}, "face_pull": {"name": "משיכת פנים בכבל", "en": "Cable Face Pull", "target": "כתף אחורית, טרפזים אמצעיים", "kind": "iso", "how": ["כבל בגובה הפנים עם חבל. אוחזים ומתרחקים צעד.", "מושכים את החבל לכיוון המצח ופותחים ידיים לצדדים. עוצרים שנייה ומחזירים לאט."], "alt": "תפוס? פרפר הפוך במכונה.", "video": "4CXhdbWOdzQ"}, "pushdown": {"name": "פשיטת מרפקים בכבל עם חבל", "en": "Rope Triceps Pushdown", "target": "יד אחורית", "kind": "iso", "how": ["כבל בגובה הגבוה, חבל. מרפקים צמודים לגוף.", "דוחפים למטה עד יד ישרה ופותחים את החבל בסוף. מחזירים לאט עד זווית של 90° במרפק."], "alt": "תפוס? פשיטה מעל הראש עם דאמבל אחד בשתי ידיים.", "video": "d-ySLTHUgQA"}, "oh_cable": {"name": "פשיטת מרפקים מעל הראש בכבל", "en": "Overhead Cable Triceps Extension", "target": "יד אחורית (הראש הארוך)", "kind": "iso", "how": ["כבל נמוך עם חבל. מסתובבים עם הגב למכונה, החבל מאחורי הראש.", "מיישרים את הידיים קדימה ולמעלה, מרפקים נשארים במקום. מחזירים לאט עד מתיחה."], "alt": "תפוס? פשיטה מעל הראש עם דאמבל אחד בשתי ידיים, בישיבה.", "video": "mRozZKkGIfg"}, "cable_curl": {"name": "כפיפת מרפקים בכבל", "en": "Cable Curl", "target": "יד קדמית", "kind": "iso", "how": ["כבל נמוך עם מוט קצר או מוט EZ. מרפקים צמודים לגוף.", "מכופפים עד הכתפיים, ומורידים לאט עד יד ישרה."], "alt": "תפוס? כפיפת מרפקים עם דאמבלים בעמידה.", "video": "C68nhss07U8"}, "preacher": {"name": "כפיפת מרפקים במכונת פריצ'ר", "en": "Machine Preacher Curl", "target": "יד קדמית", "kind": "iso", "how": ["בית השחי צמוד לראש הכרית, הזרועות מונחות עליה.", "מכופפים עד למעלה, ומורידים לאט עד כמעט ישר."], "alt": "תפוסה? כפיפת מרפקים בשיפוע עם דאמבלים.", "video": "g7hiWfUH6i8"}, "incline_curl": {"name": "כפיפת מרפקים בשיפוע עם דאמבלים", "en": "Incline DB Curl", "target": "יד קדמית (מתיחה)", "kind": "iso", "how": ["ספה בשיפוע 45°, הידיים תלויות מאחורי הגוף.", "מכופפים בלי להזיז את המרפקים קדימה, ומורידים לאט עד יד ישרה."], "alt": "תפוס? כפיפת מרפקים בכבל.", "video": "5uAAU3sUURA"}, "hack": {"name": "האק סקוואט", "en": "Hack Squat", "target": "ירך קדמית, ישבן", "kind": "heavy", "how": ["גב והכתפיים צמודים לכריות, כפות רגליים באמצע הפלטה ברוחב הכתפיים.", "יורדים לאט (2–3 שניות) עמוק ככל שהגב התחתון נשאר צמוד.", "דוחפים דרך כל כף הרגל, בלי לנעול ברכיים למעלה."], "alt": "תפוס? לחיצת רגליים (כפות רגליים באמצע הפלטה), או סקוואט בסמית'.", "video": "-lAnEGH2blE"}, "squat": {"name": "סקוואט עם מוט", "en": "Barbell Back Squat", "target": "ירך קדמית, ישבן", "kind": "heavy", "how": ["המוט על הטרפזים העליונים, רגליים ברוחב הכתפיים, אצבעות מעט החוצה.", "יורדים לאט עד שהירך מקבילה לרצפה או מעט מתחת, גב ישר, ברכיים בכיוון האצבעות.", "דוחפים חזק למעלה. תמיד בתוך מתקן עם תפסי ביטחון."], "alt": "תפוס? האק סקוואט, או סקוואט בסמית'.", "video": "QLbMsabhBqY"}, "leg_press": {"name": "לחיצת רגליים", "en": "Leg Press", "target": "ירך קדמית, ישבן", "kind": "main", "how": ["כפות רגליים באמצע הפלטה ברוחב הכתפיים.", "יורדים לאט ועמוק ככל שהגב התחתון נשאר צמוד למשענת.", "דוחפים בלי לנעול ברכיים."], "alt": "תפוסה? האק סקוואט.", "video": "q4W4_VJbKW0"}, "leg_press_glute": {"name": "לחיצת רגליים עם רגליים גבוהות ורחבות", "en": "Leg Press (High & Wide Feet)", "target": "ישבן, ירך אחורית", "kind": "main", "how": ["כפות רגליים גבוה ורחב על הפלטה, אצבעות מעט החוצה.", "יורדים לאט ועמוק ככל שהישבן נשאר צמוד למושב. דוחפים דרך העקבים."], "alt": "תפוסה? האק סקוואט עם רגליים גבוהות על הפלטה.", "video": "q4W4_VJbKW0"}, "leg_ext": {"name": "פשיטת ברכיים במכונה", "en": "Leg Extension", "target": "ירך קדמית", "kind": "iso", "how": ["הברך מול הציר של המכונה, הכרית על הקרסול.", "מיישרים עד הסוף, עוצרים שנייה למעלה, ומורידים לאט ב-3 שניות."], "alt": "תפוסה? סקוואט בולגרי עם דאמבלים, 2 סטים לכל רגל.", "video": "MXvSzXEBOTI"}, "seated_curl": {"name": "כפיפת ברכיים בישיבה", "en": "Seated Leg Curl", "target": "ירך אחורית", "kind": "iso", "how": ["הברך מול הציר, הכרית מעל הברכיים נעולה, הכרית התחתונה מאחורי הקרסול.", "מכופפים עד הסוף, עוצרים שנייה, ומחזירים לאט עד רגל ישרה."], "alt": "תפוסה? כפיפת ברכיים בשכיבה.", "video": "Z5pRnXaCjpM"}, "lying_curl": {"name": "כפיפת ברכיים בשכיבה", "en": "Lying Leg Curl", "target": "ירך אחורית", "kind": "iso", "how": ["שוכבים על הבטן, הכרית מעל העקבים, הברכיים מעט מעבר לקצה הספה.", "מכופפים עד הישבן, האגן נשאר צמוד לספה, ומחזירים לאט."], "alt": "תפוסה? כפיפת ברכיים בישיבה.", "video": "kLJlqfn_bDM"}, "rdl": {"name": "דדליפט רומני במוט", "en": "Barbell Romanian Deadlift", "target": "ירך אחורית, ישבן", "kind": "heavy", "how": ["מחזיקים את המוט מול הירכיים, רגליים ברוחב האגן, ברכיים קצת כפופות.", "דוחפים את הישבן אחורה, המוט מחליק צמוד לרגליים. יורדים 3 שניות עד מתיחה חזקה בירך האחורית.", "הגב ישר כל הזמן. עולים בדחיפת האגן קדימה. רצועות הרמה אם האחיזה נגמרת."], "alt": "תפוס? דדליפט רומני עם דאמבלים, או בסמית'.", "video": "xgusDooVfKU"}, "db_rdl": {"name": "דדליפט רומני עם דאמבלים", "en": "Dumbbell Romanian Deadlift", "target": "ירך אחורית, ישבן", "kind": "main", "how": ["דאמבל בכל יד מול הירכיים, ברכיים קצת כפופות.", "דוחפים את הישבן אחורה עד מתיחה חזקה בירך האחורית, גב ישר. עולים בדחיפת האגן."], "alt": "אין דאמבלים כבדים מספיק? דדליפט רומני במוט.", "video": "xgusDooVfKU"}, "back_ext": {"name": "פשיטת גב ב-45° (דגש על ישבן)", "en": "45° Back Extension", "target": "ישבן, ירך אחורית", "kind": "iso", "how": ["הכרית מתחת לעצם האגן, העקבים תחת הכריות, כפות רגליים מעט פתוחות.", "גב מעט מעוגל (סנטר לחזה) כדי שהעבודה תהיה בישבן. יורדים עד מתיחה ועולים בכיווץ ישבן עד קו ישר.", "קל מדי? מחבקים פלטה לחזה."], "alt": "תפוס? מכונת הרחקת ירכיים, או לחיצת רגליים עם רגליים גבוהות.", "video": "7Z-FQ_yA7uM"}, "calf_stand": {"name": "עליות תאומים בעמידה", "en": "Standing Calf Raise", "target": "שוקיים", "kind": "iso", "how": ["קצות כפות הרגליים על המדרגה, העקבים באוויר.", "מורידים עקבים למתיחה ועוצרים 2 שניות, ועולים הכי גבוה שאפשר."], "alt": "תפוסה? עליות תאומים במכונת לחיצת רגליים.", "video": "ucy86plaufg"}, "seated_calf": {"name": "עליות תאומים בישיבה", "en": "Seated Calf Raise", "target": "שוקיים", "kind": "iso", "how": ["הכרית על הירכיים מעל הברכיים, קצות כפות הרגליים על המדרגה.", "מורידים עקבים למתיחה ועוצרים 2 שניות, ועולים הכי גבוה שאפשר."], "alt": "תפוסה? עליות תאומים בעמידה.", "video": "QCfQyNXEzS8"}, "hanging": {"name": "הרמת רגליים בתלייה", "en": "Hanging Leg Raise", "target": "בטן", "kind": "iso", "how": ["תלויים על מוט או ברצועות, הגוף רגוע ולא מתנדנד.", "מרימים ברכיים (או רגליים ישרות) ומגלגלים את האגן למעלה. יורדים לאט."], "alt": "קשה לאחיזה או לקמיצה? הרמת ברכיים במתקן מקבילים עם משענת לגב.", "video": "oei1GdP9aoY"}, "shrug": {"name": "משיכת כתפיים עם דאמבלים", "en": "DB Shrug", "target": "טרפזים", "kind": "iso", "how": ["דאמבל כבד בכל יד לצד הגוף.", "מרימים כתפיים ישר למעלה לכיוון האוזניים, עוצרים 2 שניות, ומורידים לאט. בלי לגלגל.", "רצועות הרמה אם האחיזה נגמרת לפני הטרפזים."], "alt": "אין דאמבלים כבדים פנויים? משיכת כתפיים במוט או בסמית'.", "video": "xiLT85G_GuU"}, "h_lateral": {"name": "הרחקה לצדדים עם דאמבלים", "en": "DB Lateral Raise", "target": "כתף אמצעית", "kind": "iso", "how": ["דאמבל 8 ק\"ג בכל יד. מרימים לצדדים עד גובה הכתפיים, מרפקים קצת כפופים.", "בלי נדנוד, מורידים לאט."], "alt": null, "video": "ssAo_xwFt5c"}, "h_knee": {"name": "הרמת ברכיים ברצועות AB", "en": "Hanging Knee Raise", "target": "בטן", "kind": "iso", "how": ["תלויים ברצועות על המתח, מרימים ברכיים לחזה ומגלגלים את האגן.", "מורידים לאט בלי נדנוד."], "alt": null, "video": "BzDldaJLDsk"}, "h_hammer": {"name": "כפיפות פטיש", "en": "Hammer Curl", "target": "יד קדמית + אמה", "kind": "iso", "how": ["דאמבל 12.5 ק\"ג. כפות ידיים זו מול זו, מרפקים צמודים. מרימים לכתף ומורידים לאט."], "alt": null, "video": "CFBZ4jN1CMI"}, "h_rear": {"name": "הרחקה לאחור בכיפוף", "en": "Bent-Over Rear Delt Raise", "target": "כתף אחורית", "kind": "iso", "how": ["דאמבל 5 ק\"ג. יושבים על קצה הספה ומתכופפים עד שהחזה קרוב לירכיים.", "פותחים ידיים לצדדים, מרפקים קצת כפופים. עוצרים שנייה ומורידים לאט."], "alt": null, "video": "GyhFsjrn7dw"}, "h_pullup": {"name": "מתח במהלך היום", "en": "Pull-Ups (spread through the day)", "target": "גב רחב + יד קדמית", "kind": "iso", "how": ["סט אחד כל שעה–שעתיים במהלך יום העבודה מהבית.", "כל סט בערך חצי מהמקסימום שלך (מקסימום 12 = 5–6 חזרות). אף פעם לא עד כשל."], "alt": null, "video": "QZue7F_Zk3A"}, "h_pushup": {"name": "שכיבות סמיכה במהלך היום", "en": "Push-Ups (spread through the day)", "target": "חזה + יד אחורית", "kind": "iso", "how": ["אפשר יחד עם סט המתח. ידיים קצת רחבות מהכתפיים, גוף ישר, חזה כמעט לרצפה.", "כל סט חצי מהמקסימום. לא עד כשל."], "alt": null, "video": "i9sTjhN4Z3M"}}, "T": {"A": {"name": "היפרטרופיה", "days": {"0": ["עליון A", "חזה + גב", [{"key": "bench", "sets": 3, "reps": "6–8", "note": null}, {"key": "pulldown", "sets": 3, "reps": "8–10", "note": null}, {"key": "incline_db", "sets": 3, "reps": "8–12", "note": null}, {"key": "cable_row", "sets": 3, "reps": "10–12", "note": null}, {"key": "lateral_cable", "sets": 4, "reps": "12–15", "note": null}, {"key": "pushdown", "sets": 3, "reps": "10–15", "note": null}]], "2": ["תחתון A", "ירך קדמית", [{"key": "hack", "sets": 3, "reps": "6–10", "note": null}, {"key": "seated_curl", "sets": 3, "reps": "10–12", "note": null}, {"key": "leg_ext", "sets": 3, "reps": "12–15", "note": null}, {"key": "calf_stand", "sets": 3, "reps": "10–15", "note": null}, {"key": "hanging", "sets": 3, "reps": "10–15", "note": null}, {"key": "reverse_pec", "sets": 3, "reps": "15–20", "note": null}]], "4": ["עליון B", "גב + כתפיים + ידיים", [{"key": "pullup_w", "sets": 3, "reps": "6–10", "note": null}, {"key": "shoulder_db", "sets": 3, "reps": "8–10", "note": null}, {"key": "cs_row", "sets": 3, "reps": "8–12", "note": null}, {"key": "chest_press_m", "sets": 3, "reps": "10–12", "note": null}, {"key": "lateral_cable", "sets": 3, "reps": "12–15", "note": null}, {"key": "cable_curl", "sets": 3, "reps": "10–12", "note": null}, {"key": "oh_cable", "sets": 2, "reps": "10–15", "note": null}]], "5": ["תחתון B", "ירך אחורית + ישבן", [{"key": "rdl", "sets": 3, "reps": "6–10", "note": null}, {"key": "leg_press_glute", "sets": 3, "reps": "10–12", "note": null}, {"key": "lying_curl", "sets": 3, "reps": "10–12", "note": null}, {"key": "back_ext", "sets": 2, "reps": "12–15", "note": null}, {"key": "seated_calf", "sets": 3, "reps": "12–15", "note": null}, {"key": "shrug", "sets": 3, "reps": "10–15", "note": null}, {"key": "lateral_cable", "sets": 3, "reps": "12–15", "note": null}, {"key": "incline_fly", "sets": 2, "reps": "12–15", "note": null}, {"key": "incline_curl", "sets": 2, "reps": "10–12", "note": null}, {"key": "pushdown", "sets": 2, "reps": "10–15", "note": null}]]}}, "B": {"name": "נפח ומתיחה", "days": {"0": ["עליון A", "חזה עליון + גב", [{"key": "smith_incline", "sets": 3, "reps": "6–10", "note": null}, {"key": "neutral_pulldown", "sets": 3, "reps": "8–12", "note": null}, {"key": "flat_db", "sets": 3, "reps": "8–12", "note": null}, {"key": "sa_cable_row", "sets": 3, "reps": "10–12", "note": null}, {"key": "lateral_cable", "sets": 4, "reps": "12–15", "note": null}, {"key": "oh_cable", "sets": 3, "reps": "10–15", "note": null}]], "2": ["תחתון A", "סקוואט", [{"key": "squat", "sets": 3, "reps": "6–8", "note": null}, {"key": "lying_curl", "sets": 3, "reps": "10–12", "note": null}, {"key": "leg_ext", "sets": 3, "reps": "12–15", "note": null}, {"key": "calf_stand", "sets": 3, "reps": "10–15", "note": null}, {"key": "hanging", "sets": 3, "reps": "10–15", "note": null}, {"key": "face_pull", "sets": 3, "reps": "15–20", "note": null}]], "4": ["עליון B", "גב + כתפיים + ידיים", [{"key": "pulldown", "sets": 3, "reps": "6–10", "note": null}, {"key": "shoulder_m", "sets": 3, "reps": "8–12", "note": null}, {"key": "tbar", "sets": 3, "reps": "8–10", "note": null}, {"key": "incline_fly", "sets": 3, "reps": "12–15", "note": null}, {"key": "lateral_cable", "sets": 3, "reps": "12–15", "note": null}, {"key": "preacher", "sets": 3, "reps": "10–12", "note": null}, {"key": "pushdown", "sets": 2, "reps": "10–15", "note": null}]], "5": ["תחתון B", "ישבן + ירך אחורית", [{"key": "db_rdl", "sets": 3, "reps": "8–12", "note": null}, {"key": "leg_press_glute", "sets": 3, "reps": "10–15", "note": null}, {"key": "seated_curl", "sets": 3, "reps": "10–12", "note": null}, {"key": "back_ext", "sets": 3, "reps": "12–15", "note": null}, {"key": "seated_calf", "sets": 3, "reps": "12–15", "note": null}, {"key": "shrug", "sets": 3, "reps": "10–15", "note": null}, {"key": "lateral_cable", "sets": 3, "reps": "12–15", "note": null}, {"key": "chest_press_m", "sets": 2, "reps": "10–12", "note": null}, {"key": "cable_curl", "sets": 2, "reps": "10–12", "note": null}, {"key": "oh_cable", "sets": 2, "reps": "10–15", "note": null}]]}}, "C": {"name": "כוח + היפרטרופיה", "days": {"0": ["עליון A", "חזה + גב (כוח)", [{"key": "bench", "sets": 4, "reps": "5–6", "note": null}, {"key": "cs_row", "sets": 3, "reps": "8–10", "note": null}, {"key": "incline_db", "sets": 2, "reps": "10–12", "note": null}, {"key": "pulldown", "sets": 3, "reps": "10–12", "note": null}, {"key": "lateral_cable", "sets": 4, "reps": "12–15", "note": null}, {"key": "pushdown", "sets": 2, "reps": "10–15", "note": null}]], "2": ["תחתון A", "האק סקוואט כבד", [{"key": "hack", "sets": 4, "reps": "5–8", "note": null}, {"key": "seated_curl", "sets": 3, "reps": "8–12", "note": null}, {"key": "leg_ext", "sets": 3, "reps": "12–15", "note": null}, {"key": "calf_stand", "sets": 3, "reps": "8–12", "note": null}, {"key": "hanging", "sets": 3, "reps": "10–15", "note": null}, {"key": "reverse_pec", "sets": 2, "reps": "15–20", "note": null}]], "4": ["עליון B", "מתח כבד + כתפיים + ידיים", [{"key": "pullup_w", "sets": 4, "reps": "5–6", "note": null}, {"key": "shoulder_db", "sets": 3, "reps": "6–8", "note": null}, {"key": "cable_row", "sets": 2, "reps": "10–12", "note": null}, {"key": "chest_press_m", "sets": 3, "reps": "8–12", "note": null}, {"key": "lateral_cable", "sets": 3, "reps": "12–15", "note": null}, {"key": "incline_curl", "sets": 3, "reps": "8–12", "note": null}, {"key": "oh_cable", "sets": 2, "reps": "10–15", "note": null}]], "5": ["תחתון B", "דדליפט רומני כבד", [{"key": "rdl", "sets": 4, "reps": "5–6", "note": null}, {"key": "leg_press_glute", "sets": 3, "reps": "8–12", "note": null}, {"key": "lying_curl", "sets": 3, "reps": "8–12", "note": null}, {"key": "back_ext", "sets": 2, "reps": "12–15", "note": null}, {"key": "seated_calf", "sets": 3, "reps": "10–15", "note": null}, {"key": "shrug", "sets": 3, "reps": "8–12", "note": null}, {"key": "lateral_cable", "sets": 3, "reps": "12–15", "note": null}, {"key": "incline_fly", "sets": 2, "reps": "12–15", "note": null}, {"key": "preacher", "sets": 2, "reps": "10–12", "note": null}, {"key": "pushdown", "sets": 2, "reps": "10–15", "note": null}]]}}}, "gymTime": {"0": "6:00–7:00", "2": "6:00–7:00", "4": "6:00–7:00", "5": "7:00–8:15 (בשישי נפתח ב-7:00)"}, "homeMini": {"1": ["מיני-אימון בבית", "יום תל אביב · 10 דק'", "5:30–5:40 בבית", [{"key": "h_lateral", "sets": 3, "reps": "15–20", "note": null}, {"key": "h_knee", "sets": 3, "reps": "10–15", "note": null}]], "3": ["מיני-אימון בבית", "יום תל אביב · 10 דק'", "5:30–5:40 בבית", [{"key": "h_hammer", "sets": 3, "reps": "12–15", "note": null}, {"key": "h_rear", "sets": 3, "reps": "15–20", "note": null}]]}, "homeExtras": [{"key": "h_pullup", "sets": 4, "reps": "חצי מקס'", "note": null}, {"key": "h_pushup", "sets": 4, "reps": "חצי מקס'", "note": null}], "walk": {"title": "הליכה בהליכון", "sub": "בבית · 30–45 דק'", "time": "בכל שעה שנוחה", "points": ["קצב שיחה, 5.0–5.6 קמ\"ש, שיפוע 2%–6%.", "יעד יומי בכל השבוע: 8,000–10,000 צעדים."]}, "blocks": [{"n": 1, "w": [1, 8], "t": "A", "title": "בלוק 1 · יסודות", "goal": "ללמוד את המכשירים, לבנות משקלי עבודה ולהוריד שומן.", "nut": "cut"}, {"n": 0, "w": [9, 9], "t": "A", "title": "שבוע הקלה", "deload": true, "nut": "build"}, {"n": 2, "w": [10, 17], "t": "B", "title": "בלוק 2 · נפח", "goal": "יותר חזרות ומתיחה. מתחילים בנייה נקייה.", "nut": "build"}, {"n": 0, "w": [18, 18], "t": "B", "title": "שבוע הקלה", "deload": true, "nut": "build"}, {"n": 3, "w": [19, 26], "t": "C", "title": "בלוק 3 · כוח", "goal": "משקלים כבדים יותר בתרגילים הראשיים.", "nut": "build"}, {"n": 0, "w": [27, 27], "t": "C", "title": "שבוע הקלה", "deload": true, "nut": "cut"}, {"n": 4, "w": [28, 35], "t": "A", "title": "בלוק 4 · יסודות (סבב 2)", "goal": "אותם תרגילים כמו בבלוק 1, עם משקלים גבוהים יותר. חיטוב קצר.", "nut": "cut"}, {"n": 0, "w": [36, 36], "t": "A", "title": "שבוע הקלה", "deload": true, "nut": "build"}, {"n": 5, "w": [37, 44], "t": "B", "title": "בלוק 5 · נפח (סבב 2)", "goal": "לשבור את השיאים של בלוק 2. בנייה נקייה.", "nut": "build"}, {"n": 0, "w": [45, 45], "t": "B", "title": "שבוע הקלה", "deload": true, "nut": "build"}, {"n": 6, "w": [46, 51], "t": "C", "title": "בלוק 6 · כוח (סבב 2)", "goal": "לשבור את השיאים של בלוק 3.", "nut": "build"}, {"n": 0, "w": [52, 52], "t": "C", "title": "שבוע הקלה + מדידות", "deload": true, "nut": "cut"}], "nutrition": {"cut": {"label": "חיטוב מתון", "kcal": "1,850–1,950", "p": "150–165 גר'", "rate": "ירידה של 0.3–0.5 ק\"ג בשבוע", "rules": ["המשקל לא יורד שבועיים ברצף: מורידים 100–150 קק\"ל.", "יורד יותר מ-0.7 ק\"ג בשבוע: מוסיפים 150 קק\"ל.", "הכוח יורד שבועיים ברצף: מוסיפים פחמימה סביב האימון."], "range": [1850, 1950]}, "build": {"label": "בנייה נקייה", "kcal": "2,200–2,350", "p": "150–165 גר'", "rate": "עלייה של 0.1–0.2 ק\"ג בשבוע", "rules": ["עולה יותר מ-0.3 ק\"ג בשבוע: מורידים 150 קק\"ל.", "המשקל לא זז שבועיים: מוסיפים 100–150 קק\"ל.", "המותניים עלו יותר מ-1 ס\"מ בחודש: העודף גדול מדי, מורידים 150 קק\"ל."], "range": [2200, 2350]}}, "meals": [{"id": "b", "title": "🌅 ארוחת בוקר", "options": [{"name": "עוגת פאדג' חלבון (הקבועה שלך)", "tag": "בסיס", "desc": "סקופ חלבון שוקולד-נוגט, ביצה L, כפית חמאת בוטנים, כפית ממרח תמרים, 2 כפות מים. אייר פרייר 165°C, 6–7 דק'.", "kcal": 295, "p": 33, "c": 14, "f": 10}, {"name": "פאדג' חלבון + סקייר ופירות יער", "tag": "מומלץ", "desc": "העוגה הקבועה + 150 גר' סקייר/יוגורט יווני 0% + 100 גר' פירות יער קפואים. אותה ארוחה, עוד 17 גר' חלבון.", "kcal": 435, "p": 50, "c": 30, "f": 10}, {"name": "שקשוקת חלבון", "desc": "2 ביצים + 2 חלבונים ברוטב עגבניות, 100 גר' קוטג' 5% בצד, פרוסת מחמצת (50 גר').", "kcal": 435, "p": 34, "c": 32, "f": 16}, {"name": "דייסת חלבון", "desc": "40 גר' שיבולת שועל במים, אחרי בישול מערבבים סקופ חלבון, 100 גר' פירות יער וכפית חמאת בוטנים.", "kcal": 345, "p": 30, "c": 41, "f": 7}, {"name": "טוסט ביצים כפול", "tag": "ימי אימון רגליים", "desc": "2 פרוסות מחמצת, 2 ביצים + 2 חלבונים מקושקשים, 50 גר' גבינה צפתית 5%, ירקות. לצד 150 גר' סקייר.", "kcal": 575, "p": 48, "c": 56, "f": 17}]}, {"id": "l", "title": "☀️ ארוחת צהריים", "options": [{"name": "עוף + אורז + ירקות (הקבועה שלך)", "tag": "בסיס", "desc": "180–200 גר' חזה עוף (משקל נא), 3 כפות אורז מבושל, ירקות אפויים וסלט, כפית שמן זית.", "kcal": 440, "p": 50, "c": 30, "f": 10}, {"name": "דג לבן + אורז + טחינה", "desc": "250 גר' פילה אמנון/דניס (נא), 4 כפות אורז, ירקות אפויים, כף טחינה גולמית.", "kcal": 520, "p": 58, "c": 41, "f": 13}, {"name": "סלמון + בטטה", "tag": "1–2 בשבוע (אומגה 3)", "desc": "150 גר' פילה סלמון, בטטה קטנה (150 גר'), שעועית ירוקה/ברוקולי.", "kcal": 490, "p": 34, "c": 40, "f": 19}, {"name": "קציצות בקר 5% + קינואה", "desc": "180 גר' בקר טחון 5% (קציצות באייר פרייר), 4 כפות קינואה, סלט ירוק עם כפית שמן זית.", "kcal": 445, "p": 42, "c": 28, "f": 15}, {"name": "סלט עוף ועדשים", "desc": "200 גר' חזה עוף, 150 גר' עדשים ירוקות מבושלות, ירקות קצוצים, לימון וכפית שמן זית.", "kcal": 475, "p": 60, "c": 37, "f": 8}, {"name": "עוף + אורז מנה מלאה", "tag": "ימי אימון", "desc": "200 גר' חזה עוף, 150 גר' אורז מבושל (כ-6 כפות), ירקות, כפית שמן זית.", "kcal": 560, "p": 52, "c": 50, "f": 10}]}, {"id": "d", "title": "🌙 ארוחת ערב", "options": [{"name": "פיצת חלבון טונה/קוטג'", "tag": "בסיס", "desc": "בסיס טונה מסוננת (או קוטג' 5%) + ביצה, 25–30 גר' מוצרלה/פרמזן, 2 אנשובי, רוטב עגבניות בלי סוכר.", "kcal": 365, "p": 43, "c": 6, "f": 17}, {"name": "צלחת קוטג' וביצים עם מחמצת", "tag": "בסיס", "desc": "פרוסת מחמצת, חצי גביע עד גביע קוטג' 5%, 2 ביצים קשות, ירקות וכרוב כבוש.", "kcal": 420, "p": 38, "c": 30, "f": 17}, {"name": "סרדינים על מחמצת/צנימים", "tag": "בסיס", "desc": "1–2 פחיות סרדינים מסוננות, מעוכות עם חרדל ולימון, על פרוסת מחמצת או צנימים.", "kcal": 465, "p": 42, "c": 28, "f": 20}, {"name": "מוקפץ הודו וירקות", "desc": "150 גר' חזה הודו ברצועות, ירקות מוקפצים, 2 כפות אורז, כפית שמן ורוטב סויה דל נתרן.", "kcal": 340, "p": 38, "c": 26, "f": 7}, {"name": "חביתת ירקות + גבינה לבנה", "desc": "2 ביצים + 2 חלבונים עם ירקות, 100 גר' גבינה לבנה 5%, סלט ופרוסת מחמצת.", "kcal": 435, "p": 34, "c": 36, "f": 16}, {"name": "סנדוויצ'ים כפולים ליום לימודים ארוך", "tag": "שני עד 22:00", "desc": "4 פרוסות שיפון/מחמצת, טונה במים, 2 ביצים קשות, חרדל, כפית טחינה וחמוצים.", "kcal": 640, "p": 52, "c": 56, "f": 20}]}, {"id": "s", "title": "🍏 נשנושים ותוספות", "multi": true, "hint": "אפשר לבחור כמה. כאן מוסיפים את הקלוריות של השלב החדש בלי לשנות את הארוחות הקבועות.", "options": [{"name": "שייק חלבון + בננה אחרי אימון", "tag": "ימי אימון", "desc": "סקופ חלבון במים + בננה בינונית. הפחמימה עוזרת להתאוששות.", "kcal": 225, "p": 25, "c": 30, "f": 2}, {"name": "יוגורט חלבון (20 גר' חלבון)", "desc": "גביע יוגורט/מעדן חלבון. מתאים לנשנוש בין ארוחות או לפני שינה.", "kcal": 150, "p": 20, "c": 13, "f": 2}, {"name": "חצי גביע קוטג' 5% + ירקות", "desc": "125 גר' קוטג' עם מלפפון/גמבה.", "kcal": 145, "p": 15, "c": 6, "f": 6}, {"name": "3 פריכיות אורז + 100 גר' גבינה לבנה 5%", "desc": "", "kcal": 185, "p": 11, "c": 25, "f": 5}, {"name": "אדממה (150 גר' מקולף)", "desc": "מהמקפיא, אידוי של 4 דק' ומלח גס.", "kcal": 180, "p": 18, "c": 13, "f": 8}, {"name": "תפוח + 15 גר' שקדים", "desc": "", "kcal": 170, "p": 3, "c": 24, "f": 8}, {"name": "2 ביצים קשות", "desc": "", "kcal": 140, "p": 12, "c": 1, "f": 10}, {"name": "שייק גדול אחרי אימון", "tag": "בנייה", "desc": "סקופ חלבון + 40 גר' שיבולת שועל טחונה + בננה, בשייקר עם מים.", "kcal": 375, "p": 30, "c": 57, "f": 5}]}], "mealDefaults": {"cut": {"b": 1, "l": 0, "d": 0, "s": [0, 1, 5, 6]}, "build": {"b": 4, "l": 5, "d": 1, "s": [7, 1, 5]}}, "guide": [{"title": "איך האימון בנוי", "points": ["4 אימונים בשבוע בספייס: ראשון, שלישי וחמישי 6:00–7:00, ושישי 7:00–8:15. בשישי המכון נפתח ב-7:00, ואין עבודה, ולכן האימון ארוך יותר וכולל השלמה לכתפיים, חזה וידיים.", "<strong>תוספות הבית</strong> (שני, רביעי ושלישי במהלך היום) הן בונוס ולא חובה.", "<strong>בלי סופר-סטים.</strong> עושים את כל הסטים של תרגיל אחד, ורק אחר כך עוברים לבא.", "<strong>מנוחה:</strong> 2–3 דקות בתרגילים שמסומנים \"כבד\", 90 שניות בתרגילים גדולים, 60–75 שניות בבידוד. הכפתור של הטיימר נמצא בפינה.", "<strong>מכשיר תפוס?</strong> בכל תרגיל כתובה חלופה. עושים אותה באותם סטים וחזרות וממשיכים, בלי לחכות.", "<strong>חימום:</strong> 5 דקות הליכה מהירה, ואז 2 סטים קלים בתרגיל הראשון בלבד."]}, {"title": "מתי להעלות משקל", "points": ["לכל תרגיל יש טווח חזרות (למשל 8–12). <strong>כשמגיעים לקצה העליון בכל הסטים</strong>, מעלים משקל באימון הבא.", "כמה להעלות: 2.5 ק\"ג בתרגילי מוט לפלג גוף עליון, 5 ק\"ג בתרגילי רגליים כבדים, דרגה אחת במכונות ובכבלים.", "אחרי העלאה מתחילים שוב מהקצה התחתון של הטווח.", "<strong>רושמים בפתק בטלפון</strong> רק את המשקל של התרגיל הראשון בכל אימון. זה המדד שמראה התקדמות.", "בלוקים 4–6 חוזרים על התרגילים של בלוקים 1–3. המטרה: לעבור את המשקלים של הבלוק המקביל."]}, {"title": "מבנה השנה", "points": ["6 בלוקים של 6–8 שבועות, ואחרי כל בלוק שבוע הקלה.", "<strong>בלוקים 1 ו-4:</strong> חיטוב מתון, כדי להוריד שומן ולשמור על הכוח.", "<strong>בלוקים 2, 3, 5 ו-6:</strong> בנייה נקייה, עודף קטן של קלוריות כדי לבנות שריר.", "שבוע 52 הוא שבוע הקלה ומדידות. אחרי זה מתחילים סבב חדש."]}, {"title": "איך יודעים שזה עובד", "points": ["<strong>משקל בוקר</strong> כל יום, אחרי שירותים. משווים את הממוצע השבועי, לא יום בודד.", "<strong>היקף מותניים</strong> בגובה הטבור, פעם בשבועיים, בבוקר.", "<strong>בבנייה:</strong> המשקל עולה לאט והמותניים נשארים במקום. זה אומר שנוסף שריר.", "<strong>בחיטוב:</strong> המותניים יורדים והמשקלים באימון נשארים. זה אומר שירד שומן ולא שריר.", "שינה של 7 שעות לפחות. בלי זה, התוצאות נעצרות."]}, {"title": "היד והעצב האולנרי", "points": ["אם העקצוץ או חוסר התחושה בקמיצה מתגברים: רצועות הרמה בכל תרגילי המשיכה והדדליפט, וחבל במקום מוט ישר בכבלים.", "בתוספות הבית מורידים קודם את סטי המתח של יום שלישי.", "אם יש החמרה, מעדכנים את הרופא או הפיזיותרפיסט."]}, {"title": "מילון קצר", "points": ["<strong>חזרה:</strong> פעם אחת שעושים את התנועה. <strong>סט:</strong> כמה חזרות ברצף ואז מנוחה.", "<strong>\"1–2 חזרות ברזרבה\":</strong> מסיימים את הסט כשמרגישים שאפשר היה לעשות עוד 1–2 חזרות נקיות.", "<strong>שבוע הקלה:</strong> אותם תרגילים, 2 סטים בכל אחד, בערך 75% מהמשקל. נותן לגוף להתאושש."]}], "REST": {"heavy": ["מנוחה 2–3 דק'", 150], "main": ["מנוחה 90 שנ'", 90], "iso": ["מנוחה 60–75 שנ'", 70]}, "LOAD": {"heavy": "משקל שמשאיר 1–2 חזרות ברזרבה בכל סט", "main": "משקל שמשאיר 1–2 חזרות ברזרבה", "iso": "בסט האחרון מגיעים עד שאי אפשר עוד חזרה נקייה"}};
+const DAYS = ["יום ראשון","יום שני","יום שלישי","יום רביעי","יום חמישי","יום שישי","שבת"];
+const DSHORT = ["א׳","ב׳","ג׳","ד׳","ה׳","ו׳","ש׳"];
+const LS = {
+  get(k,d){try{const v=localStorage.getItem(k);return v===null?d:v}catch(e){return d}},
+  set(k,v){try{localStorage.setItem(k,v)}catch(e){}},
+  del(k){try{localStorage.removeItem(k)}catch(e){}}
+};
+const $ = s => document.querySelector(s);
+const RX = /(\d[\d.,:%°]*\s?[–-]\s?\d[\d.,:%°]*|\d+\/\d+)/g;
+const nb = s => String(s).replace(RX, '<span dir="ltr" class="n">$1</span>');
+const esc = s => nb(String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])));
+
+function startDate(){
+  const s = LS.get("sy_start", DATA.start);
+  const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d);
+}
+function midnight(d){return new Date(d.getFullYear(), d.getMonth(), d.getDate())}
+function fmt(d){return d.getDate()+"."+(d.getMonth()+1)+"."+d.getFullYear()}
+function info(date){
+  const st = startDate(), days = Math.round((midnight(date)-st)/864e5);
+  if (days < 0) return {before:true, daysLeft:-days, week:1, cycle:1, abs:0};
+  const absW = Math.floor(days/7);
+  return {before:false, week:absW%52+1, cycle:Math.floor(absW/52)+1, abs:absW};
+}
+function blockOf(week){return DATA.blocks.find(b => week>=b.w[0] && week<=b.w[1])}
+
+const NOW = new Date();
+const TODAY = info(NOW);
+const state = {week: TODAY.week, dow: NOW.getDay(), page:"day"};
+
+function plan(week, dow){
+  const b = blockOf(week), tpl = DATA.T[b.t];
+  if (DATA.T[b.t].days[dow]) {
+    const [title, sub, items] = tpl.days[dow];
+    const extras = dow===2 ? DATA.homeExtras : [];
+    return {kind:"gym", title, sub, items, extras, time:DATA.gymTime[dow], block:b};
+  }
+  if (DATA.homeMini[dow]) {
+    const [title, sub, time, items] = DATA.homeMini[dow];
+    return {kind:"home", title, sub, items, extras:[], time, block:b};
+  }
+  return {kind:"walk", title:DATA.walk.title, sub:DATA.walk.sub, items:[], extras:[], time:DATA.walk.time, block:b};
+}
+function estMin(items, deload){
+  let s = 6*60;
+  items.forEach(it => { const ex = DATA.EX[it.key]; const n = deload ? 2 : it.sets;
+    s += n*(45 + DATA.REST[ex.kind][1]) + 60; });
+  return Math.round(s/60/5)*5;
+}
+function doneKey(week, dow){return "sy_done_"+week+"_"+dow}
+function isDone(week,dow){return LS.get(doneKey(week,dow),"")==="1"}
+
+function renderHeader(){
+  const b = blockOf(state.week);
+  $("#weekTxt").innerHTML = "שבוע "+state.week+" מתוך 52<small>"+esc(b.deload ? b.title : b.title.split(" · ")[0]+" · "+DATA.T[b.t].name)+"</small>";
+  $("#progBar").style.width = (state.week/52*100)+"%";
+  const isToday = state.week===TODAY.week && state.dow===NOW.getDay();
+  $("#todayBtn").classList.toggle("show", !isToday);
+  const labels = {0:"עליון A",1:"בית",2:"תחתון A",3:"בית",4:"עליון B",5:"תחתון B",6:"הליכה"};
+  let h = "";
+  for (let d=0; d<7; d++){
+    const p = plan(state.week,d);
+    const cls = ["dbtn", p.kind==="gym"?"gym":"light"];
+    if (d===state.dow) cls.push("sel");
+    if (state.week===TODAY.week && d===NOW.getDay() && !TODAY.before) cls.push("today");
+    if (isDone(state.week,d)) cls.push("done");
+    h += '<button class="'+cls.join(" ")+'" data-d="'+d+'"><b>'+DSHORT[d]+'</b><span>'+labels[d]+'</span></button>';
+  }
+  $("#strip").innerHTML = h;
+  $("#strip").querySelectorAll(".dbtn").forEach(el => el.onclick = () => { state.dow=+el.dataset.d; showPage("day"); render(); });
+}
+
+function exCard(it, i, deload, homeTag){
+  const ex = DATA.EX[it.key];
+  const heavy = ex.kind==="heavy" && !deload;
+  const sets = deload ? "2 סטים × "+it.reps : it.sets+" סטים × "+it.reps;
+  const rest = DATA.REST[ex.kind][0];
+  const load = deload ? "משקל של כ-75% מהרגיל, 3–4 חזרות ברזרבה" : (homeTag ? "" : DATA.LOAD[ex.kind]);
+  let h = '<article class="ex'+(heavy?" heavy":"")+'">';
+  h += '<div class="ex-top"><div class="num">'+(i+1)+'</div><div style="flex:1;min-width:0">';
+  h += '<h3 class="ex-name">'+esc(ex.name)+(heavy?'<span class="tag">כבד</span>':'')+'</h3>';
+  h += '<div class="ex-en ltr">'+esc(ex.en)+'</div>';
+  h += '<div class="ex-target">'+esc(ex.target)+'</div></div></div>';
+  h += '<div class="stats"><span class="stat main">'+esc(sets)+'</span>';
+  if (!homeTag) h += '<span class="stat">'+esc(rest)+'</span>';
+  h += '</div>';
+  if (load) h += '<div class="load">'+esc(load)+'</div>';
+  if (ex.alt) h += '<div class="alt"><b>חלופה:</b> '+esc(ex.alt)+'</div>';
+  h += '<details class="how"><summary>איך עושים</summary><ol>'+ex.how.map(s=>'<li>'+esc(s)+'</li>').join("")+'</ol>';
+  h += '<a class="vbtn" href="https://www.youtube.com/watch?v='+ex.video+'" target="_blank" rel="noopener">▶ סרטון הדגמה</a></details>';
+  return h + '</article>';
+}
+
+function renderDay(){
+  const p = plan(state.week, state.dow), b = p.block, deload = !!b.deload;
+  let h = '<div class="hero"><h1 class="dayname">'+DAYS[state.dow]+'</h1><div class="daytitle">'+esc(p.title)+' · '+esc(p.sub)+'</div><div class="chips">';
+  h += '<span class="chip strong">'+esc(p.time)+'</span>';
+  if (p.kind==="gym"){
+    const sets = p.items.reduce((a,it)=>a+(deload?2:it.sets),0);
+    h += '<span class="chip">ספייס</span><span class="chip">~'+estMin(p.items,deload)+' דק\'</span><span class="chip">'+sets+' סטים</span>';
+  }
+  h += '</div></div>';
+
+  if (TODAY.before && state.week===1) h += '<div class="note accent">התוכנית מתחילה ב-<b>'+fmt(startDate())+'</b>, בעוד '+TODAY.daysLeft+' ימים. מוצג שבוע 1 לתצוגה מקדימה.</div>';
+  if (deload) h += '<div class="note warm"><b>שבוע הקלה.</b> אותם תרגילים כמו בבלוק שהסתיים, 2 סטים בכל תרגיל, בערך 75% מהמשקל. המטרה היא לתת לגוף להתאושש לפני הבלוק הבא. את תוספות הבית אפשר לדלג.</div>';
+  if (!deload && (state.week===b.w[0] || state.week===b.w[0]+1) && p.kind==="gym") {
+    h += b.n===1 ? '<div class="note accent"><b>שבוע היכרות.</b> מוצאים את המכשירים, מכוונים מושבים ובונים משקלי עבודה. בכל סט משאירים 2–3 חזרות ברזרבה.</div>'
+                 : '<div class="note accent"><b>שבוע פתיחה של '+esc(b.title)+'.</b> מתחילים במשקל שמשאיר 2 חזרות ברזרבה, ומשבוע הבא דוחפים.</div>';
+  }
+
+  if (p.kind==="walk"){
+    h += '<div class="walk-card"><ul>'+DATA.walk.points.map(s=>'<li>'+esc(s)+'</li>').join("")+'</ul></div>';
+  } else {
+    if (p.kind==="gym") h += '<div class="note">מתחילים ב-5 דקות חימום: הליכה מהירה, ואז 2 סטים קלים בתרגיל הראשון. כל תרגיל עד סוף כל הסטים שלו, ורק אחר כך עוברים לבא.</div>';
+    if (p.kind==="home") h += '<div class="note">בונוס, לא חובה. קל: בכל סט נשארות 2–3 חזרות ברזרבה. תרגיל אחד ואחריו השני.</div>';
+    h += '<div class="section-label">'+(p.kind==="gym"?"בחדר הכושר":"בבית · בונוס")+'</div>';
+    const main = p.kind==="gym" && state.dow===5 ? p.items.slice(0,6) : p.items;
+    h += main.map((it,i)=>exCard(it,i,deload,p.kind==="home")).join("");
+    if (main.length < p.items.length) { h += '<div class="section-label">השלמה: כתפיים, חזה וידיים</div>'; h += p.items.slice(6).map((it,i)=>exCard(it,i+6,deload,false)).join(""); }
+    if (p.extras.length){
+      h += '<div class="section-label">בבית, במהלך יום העבודה · אופציונלי</div>';
+      h += '<div class="note">בונוס, לא חובה. 4 סטים מכל אחד לאורך היום. מדלגים אחרי לילה קצר, כשהמשקלים בחדר הכושר יורדים, או כשהקמיצה מגיבה.</div>';
+      h += p.extras.map((it,i)=>exCard(it,i,false,true)).join("");
+    }
+  }
+  const on = isDone(state.week,state.dow);
+  h += '<div class="donebar"><button class="donebtn'+(on?" on":"")+'" id="doneBtn">'+(on?"✓ בוצע":"סימון: בוצע")+'</button></div>';
+  $("#p-day").innerHTML = h;
+  $("#doneBtn").onclick = () => { const k=doneKey(state.week,state.dow); isDone(state.week,state.dow)?LS.del(k):LS.set(k,"1"); render(); };
+}
+
+function renderYear(){
+  const cur = blockOf(TODAY.week), N = DATA.nutrition[cur.nut || blockOf(TODAY.week+1 > 52 ? 1 : TODAY.week+1).nut || "build"];
+  let h = '<div class="card"><h2>'+esc(cur.title)+'</h2><p>'+esc(cur.goal || "שבוע קל להתאוששות. בסופו מתחילים את הבלוק הבא.")+'</p>';
+  h += '<div class="kpis"><div class="kpi"><b>'+TODAY.week+'/52</b><span>שבוע</span></div><div class="kpi"><b>'+esc(N.kcal)+'</b><span>קק"ל ביום</span></div><div class="kpi"><b>'+esc(N.p)+'</b><span>חלבון</span></div></div></div>';
+  h += '<div class="card"><h3>היעד לשנה</h3><ul><li>עלייה של 1–3 ק"ג שריר. זה הטווח הריאלי אחרי 15 שנות אימון.</li><li>ירידה בהיקף המותניים ובאחוז השומן, בעיקר בבלוקים 1 ו-4.</li><li>עלייה במשקלים בתרגילים הראשיים בכל בלוק לעומת הבלוק המקביל.</li></ul></div>';
+  DATA.blocks.forEach(b => {
+    if (b.deload) return;
+    const del = DATA.blocks.find(x => x.deload && x.w[0]===b.w[1]+1);
+    const weeks = []; for (let w=b.w[0]; w<=(del?del.w[0]:b.w[1]); w++) weeks.push(w);
+    h += '<div class="blk"><div class="blk-h"><b>'+esc(b.title)+'</b><span>שבועות '+b.w[0]+'–'+(del?del.w[0]:b.w[1])+' · '+esc(DATA.nutrition[b.nut].label)+'</span></div><div class="weeks">';
+    weeks.forEach(w => {
+      const c = ["wk"]; if (w<TODAY.week && !TODAY.before) c.push("past"); if (w===TODAY.week && !TODAY.before) c.push("cur");
+      if (blockOf(w).deload) c.push("del"); if (w===state.week) c.push("view");
+      h += '<button class="'+c.join(" ")+'" data-w="'+w+'">'+w+'</button>';
+    });
+    h += '</div></div>';
+  });
+  h += '<div class="legend"><span>מסגרת מקווקוות = שבוע הקלה</span><span>צהוב = השבוע הנוכחי</span><span>לחיצה = מעבר לשבוע</span></div>';
+  h += '<p style="color:var(--faint);font-size:.8125rem;margin:12px 0">'+'התחלה: '+fmt(startDate())+'. אחרי שבוע 52 מתחילים סבב חדש משבוע 1.'+(TODAY.cycle>1?' כרגע: סבב '+TODAY.cycle+'.':'')+'</p>';
+  $("#p-year").innerHTML = h;
+  $("#p-year").querySelectorAll(".wk").forEach(el => el.onclick = () => { state.week=+el.dataset.w; state.dow=0; showPage("day"); render(); });
+}
+
+function renderFood(){
+  const b = blockOf(state.week), key = b.nut, N = DATA.nutrition[key];
+  const sk = "sy_meals_"+key;
+  let sel; try { sel = JSON.parse(LS.get(sk,"null")); } catch(e) { sel = null; }
+  if (!sel) sel = JSON.parse(JSON.stringify(DATA.mealDefaults[key]));
+  const tot = {kcal:0,p:0,c:0,f:0};
+  DATA.meals.forEach(m => { const pick = [].concat(sel[m.id] ?? []); pick.forEach(i => { const o = m.options[i]; if (o) ["kcal","p","c","f"].forEach(k => tot[k]+=o[k]); }); });
+  const hi = N.range[1], pct = Math.min(100, tot.kcal/hi*100);
+  let h = '<div class="card"><h2>'+esc(N.label)+'</h2><p>שבוע '+state.week+' · '+esc(b.title)+'</p>';
+  h += '<div class="kpis"><div class="kpi"><b>'+esc(N.kcal)+'</b><span>קק"ל ביום</span></div><div class="kpi"><b>'+esc(N.p)+'</b><span>חלבון</span></div><div class="kpi"><b style="font-size:.8125rem">'+esc(N.rate)+'</b><span>קצב</span></div></div>';
+  h += '<ul style="margin-top:12px">'+N.rules.map(r=>'<li>'+esc(r)+'</li>').join("")+'</ul></div>';
+  h += '<div class="totals"><div class="tot-row"><span>סה"כ היום</span><span><b>'+tot.kcal+'</b> / '+esc(N.kcal)+' קק"ל</span></div>';
+  h += '<div class="bar"><i class="'+(tot.kcal>hi?"over":"")+'" style="width:'+pct+'%"></i></div>';
+  h += '<div class="tot-row" style="margin-top:8px"><span>חלבון '+tot.p+' גר\'</span><span>פחמימה '+tot.c+' גר\'</span><span>שומן '+tot.f+' גר\'</span></div></div>';
+  if (tot.kcal < N.range[0]) h += '<div class="note">חסרות כ-'+(N.range[0]-tot.kcal)+' קק"ל ליעד. אפשר להוסיף נשנוש מהרשימה.</div>';
+  if (tot.kcal > hi) h += '<div class="note warm">יותר מהיעד בכ-'+(tot.kcal-hi)+' קק"ל. אפשר להוריד נשנוש או לבחור ארוחה קלה יותר.</div>';
+  DATA.meals.forEach(m => {
+    const multi = m.id==="s", pick = [].concat(sel[m.id] ?? []);
+    h += '<div class="meal"><h3>'+esc(m.title)+(multi?' <span style="font-weight:500;color:var(--muted);font-size:.8125rem">(אפשר לבחור כמה)</span>':'')+'</h3>';
+    m.options.forEach((o,j) => {
+      h += '<button class="opt'+(pick.includes(j)?" on":"")+'" data-m="'+m.id+'" data-j="'+j+'"><b>'+esc(o.name)+'</b>'+(o.tag?'<span class="tag">'+esc(o.tag)+'</span>':'')+'<p>'+esc(o.desc)+'</p><div class="mac">'+o.kcal+' קק"ל · חלבון '+o.p+' · פחמימה '+o.c+' · שומן '+o.f+'</div></button>';
+    });
+    h += '</div>';
+  });
+  h += '<div class="set-row" style="margin-bottom:12px"><button class="btn" id="mealReset">חזרה לתפריט המומלץ</button></div>';
+  $("#p-food").innerHTML = h;
+  $("#p-food").querySelectorAll(".opt").forEach(el => el.onclick = () => {
+    const m = el.dataset.m, j = +el.dataset.j;
+    if (m==="s") { const a = [].concat(sel.s ?? []); const k = a.indexOf(j); k>=0 ? a.splice(k,1) : a.push(j); sel.s = a; }
+    else sel[m] = j;
+    LS.set(sk, JSON.stringify(sel)); renderFood(); });
+  $("#mealReset").onclick = () => { LS.del(sk); renderFood(); };
+}
+
+function renderGuide(){
+  let h = DATA.guide.map(g => '<div class="card"><h3>'+esc(g.title)+'</h3><ul>'+g.points.map(p=>'<li>'+nb(p)+'</li>').join("")+'</ul></div>').join("");
+  h += '<div class="card"><h3>הגדרות</h3><p>תאריך התחלה של התוכנית (יום ראשון):</p><div class="set-row"><input type="date" id="stIn" value="'+LS.get("sy_start",DATA.start)+'"><button class="btn pri" id="stSave">שמירה</button></div>';
+  h += '<div class="set-row"><button class="btn danger" id="reset">איפוס סימוני "בוצע"</button></div></div>';
+  $("#p-guide").innerHTML = h;
+  $("#stSave").onclick = () => { const v=$("#stIn").value; if(v){LS.set("sy_start",v); location.reload();} };
+  const r = $("#reset"); let armed=false;
+  r.onclick = () => { if(!armed){armed=true;r.classList.add("arm");r.textContent="לחיצה נוספת לאישור";setTimeout(()=>{armed=false;r.classList.remove("arm");r.textContent='איפוס סימוני "בוצע"'},3000);return;}
+    try{Object.keys(localStorage).filter(k=>k.startsWith("sy_done_")).forEach(k=>localStorage.removeItem(k))}catch(e){} render(); renderGuide(); };
+}
+
+function showPage(p){
+  state.page=p; document.body.className="p-"+p;
+  requestAnimationFrame(()=>document.documentElement.style.setProperty("--hdr", document.querySelector("header").offsetHeight+"px"));
+  document.querySelectorAll(".page").forEach(el=>el.classList.toggle("on", el.id==="p-"+p));
+  document.querySelectorAll(".tab").forEach(el=>el.classList.toggle("on", el.dataset.p===p));
+}
+function render(){
+  renderHeader(); renderDay(); renderYear(); renderFood();
+}
+document.querySelectorAll(".tab").forEach(el => el.onclick = () => { showPage(el.dataset.p); if(el.dataset.p==="guide") renderGuide(); window.scrollTo(0,0); });
+$("#prevW").onclick = () => { state.week = state.week>1 ? state.week-1 : 52; render(); };
+$("#nextW").onclick = () => { state.week = state.week<52 ? state.week+1 : 1; render(); };
+$("#todayBtn").onclick = () => { state.week=TODAY.week; state.dow=NOW.getDay(); showPage("day"); render(); window.scrollTo(0,0); };
+
+// rest timer
+let tEnd=0, tInt=null;
+function tick(){ const left=Math.max(0,Math.round((tEnd-Date.now())/1000));
+  $("#fabTxt").textContent = left ? Math.floor(left/60)+":"+String(left%60).padStart(2,"0") : "";
+  $("#fab").classList.toggle("run", left>0);
+  if(!left){ clearInterval(tInt); tInt=null; if(tEnd){ try{navigator.vibrate&&navigator.vibrate([300,150,300])}catch(e){} tEnd=0; } } }
+$("#fab").onclick = () => $("#sheet").classList.add("on");
+$("#tClose").onclick = () => $("#sheet").classList.remove("on");
+$("#sheet").onclick = e => { if(e.target.id==="sheet") $("#sheet").classList.remove("on"); };
+$("#tStop").onclick = () => { tEnd=0; clearInterval(tInt); tInt=null; tick(); $("#sheet").classList.remove("on"); };
+document.querySelectorAll("[data-t]").forEach(b => b.onclick = () => { tEnd=Date.now()+(+b.dataset.t)*1000; clearInterval(tInt); tInt=setInterval(tick,500); tick(); $("#sheet").classList.remove("on"); });
+
+showPage("day"); render(); renderGuide();
+if ("serviceWorker" in navigator && location.protocol==="https:") navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>
